@@ -23,7 +23,8 @@ public class OutputView {
 
     public void printChanges(EnumMap<Coin, Integer> coins) {
         System.out.println(PRINT_CHANGES);
-        coins.keySet().forEach(coin ->
-                System.out.println(MessageFormat.format(PRINT_COIN_FORMAT, coin.getAmount(), coins.get(coin))));
+        coins.keySet().stream()
+                .filter(coin -> coins.get(coin) != 0)
+                .forEach(coin -> System.out.println(MessageFormat.format(PRINT_COIN_FORMAT, coin.getAmount(), coins.get(coin))));
     }
 }

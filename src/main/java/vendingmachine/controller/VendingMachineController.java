@@ -6,10 +6,10 @@ import vendingmachine.domain.Product;
 import vendingmachine.view.InputView;
 import vendingmachine.view.OutputView;
 
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class VendingMachineController {
     private final InputView inputView;
@@ -22,21 +22,28 @@ public class VendingMachineController {
 
     public void run() {
         int vendingMachineMoney = inputView.inputVendingMachineMoney();
-        outputView.printCoinsHaveVendingMachine(coinGeneration(vendingMachineMoney));
+        EnumMap<Coin, Integer> coins = coinGeneration(vendingMachineMoney);
+        outputView.printCoinsHaveVendingMachine(coins);
         List<Product> products = inputView.inputProducts();
         int amount = inputView.inputAmount();
         amount = buying(products, amount);
-
+        EnumMap<Coin, Integer> change = change(coins, amount, vendingMachineMoney);
+        outputView.printAmount(amount);
+        outputView.printChanges(change);
     }
 
     public EnumMap<Coin, Integer> coinGeneration(int vendingMachineMoney) {
         EnumMap<Coin, Integer> coins = new EnumMap<>(Coin.class);
-        int leftMoney = vendingMachineMoney;
         for (Coin coin : Coin.values()) {
-            int randomNumber = randomChoice(leftMoney, coin);
-            coins.put(coin, randomNumber);
-            leftMoney -= randomNumber * coin.getAmount();
+            coins.put(coin, 0);
         }
+        int leftMoney = vendingMachineMoney;
+        do {
+            Coin randomCoin = randomChoice(leftMoney);
+            coins.put(randomCoin, coins.getOrDefault(randomCoin, 0) + 1);
+            leftMoney -= randomCoin.getAmount();
+
+        } while (leftMoney != 0);
         return coins;
     }
 
@@ -56,6 +63,34 @@ public class VendingMachineController {
         return amount;
     }
 
+    public EnumMap<Coin, Integer> change(EnumMap<Coin, Integer> coins, int amount, int vendingMachineMoney) {
+        EnumMap<Coin, Integer> change = new EnumMap<>(Coin.class);
+        int changeAmount = amount;
+        for (Coin coin : coins.keySet()) {
+            int numberOfCoins = changeAmount / coin.getAmount();
+            if (numberOfCoins == 0 || coins.get(coin) == 0) {
+                continue;
+            }
+            if (numberOfCoins > coins.get(coin)) {
+                change.put(coin, coins.get(coin));
+                changeAmount -= numberOfCoins * coin.getAmount();
+                continue;
+            }
+            change.put(coin, numberOfCoins);
+            changeAmount -= numberOfCoins * coin.getAmount();
+        }
+        if (totalChange(coins) > totalChange(change)) {
+            return coins;
+        }
+        return change;
+    }
+
+    private int totalChange(EnumMap<Coin, Integer> change) {
+        return change.keySet().stream()
+                .mapToInt(c -> c.getAmount() * change.get(c))
+                .sum();
+    }
+
     private Product findProduct(List<Product> products, String purchaseProduct) {
         return products.stream()
                 .filter(product -> product.getName().equals(purchaseProduct))
@@ -71,18 +106,23 @@ public class VendingMachineController {
         return min > amount;
     }
 
-    private int randomChoice(int vendingMachineMoney, Coin coin) {
-        int numberOfCoins = vendingMachineMoney / coin.getAmount();
-        List<Integer> coinNumbers = createCoinList(numberOfCoins);
-        if (Coin.COIN_10 == coin) {
-            return vendingMachineMoney / coin.getAmount();
+    private Coin randomChoice(int leftMoney) {
+        List<Integer> amounts = Arrays.stream(Coin.values())
+                .map(Coin::getAmount)
+                .collect(Collectors.toList());
+        while (true) {
+            int randomAmount = Randoms.pickNumberInList(amounts);
+
+            if ((leftMoney - randomAmount) >= 0) {
+                return findCoin(randomAmount);
+            }
         }
-        return Randoms.pickNumberInList(coinNumbers);
     }
 
-    private List<Integer> createCoinList(int numberOfCoins) {
-        return IntStream.rangeClosed(0, numberOfCoins)
-                .boxed()
-                .collect(Collectors.toList());
+    private Coin findCoin(int amount) {
+        return Arrays.stream(Coin.values())
+                .filter(coin -> coin.getAmount() == amount)
+                .findFirst()
+                .orElseThrow(IllegalArgumentException::new);
     }
 }
