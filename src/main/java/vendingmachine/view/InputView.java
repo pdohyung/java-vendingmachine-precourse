@@ -17,4 +17,9 @@ public class InputView {
         System.out.println("\n상품명과 가격, 수량을 입력해 주세요.");
         return InputValidator.validateProducts(sc.nextLine());
     }
+
+    public int inputAmount() {
+        System.out.println("\n투입 금액을 입력해 주세요.");
+        return InputValidator.validateAmount(sc.nextLine());
+    }
 }

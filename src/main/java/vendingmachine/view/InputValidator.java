@@ -21,6 +21,10 @@ public class InputValidator {
                 .collect(Collectors.toList());
     }
 
+    public static int validateAmount(String input) {
+        return convertStringToInteger(input);
+    }
+
     public static Product convertStringToProduct(String productString) {
         String[] parts = productString.replace("[", "").replace("]", "").split(",");
         String name = parts[0];
