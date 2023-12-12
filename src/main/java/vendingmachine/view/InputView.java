@@ -22,4 +22,9 @@ public class InputView {
         System.out.println("\n투입 금액을 입력해 주세요.");
         return InputValidator.validateAmount(sc.nextLine());
     }
+
+    public String inputPurchaseProduct() {
+        System.out.println("구매할 상품명을 입력해 주세요.");
+        return InputValidator.validatePurchaseProduct(sc.nextLine());
+    }
 }
