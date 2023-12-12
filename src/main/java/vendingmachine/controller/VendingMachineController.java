@@ -2,6 +2,7 @@ package vendingmachine.controller;
 
 import camp.nextstep.edu.missionutils.Randoms;
 import vendingmachine.domain.Coin;
+import vendingmachine.domain.Product;
 import vendingmachine.view.InputView;
 import vendingmachine.view.OutputView;
 
@@ -22,6 +23,10 @@ public class VendingMachineController {
     public void run() {
         int vendingMachineMoney = inputView.inputVendingMachineMoney();
         outputView.printCoinsHaveVendingMachine(coinGeneration(vendingMachineMoney));
+        List<Product> products = inputView.inputProducts();
+        int amount = inputView.inputAmount();
+        amount = buying(products, amount);
+
     }
 
     public EnumMap<Coin, Integer> coinGeneration(int vendingMachineMoney) {
@@ -33,6 +38,37 @@ public class VendingMachineController {
             leftMoney -= randomNumber * coin.getAmount();
         }
         return coins;
+    }
+
+    public int buying(List<Product> products, int amount) {
+        while (true) {
+            outputView.printAmount(amount);
+            String purchaseProduct = inputView.inputPurchaseProduct();
+            Product product = findProduct(products, purchaseProduct);
+            if (product.getQuantity() == 0) {
+                break;
+            }
+            amount -= product.getPrice();
+            if (checkMinimumProductPrice(products, amount)) {
+                break;
+            }
+        }
+        return amount;
+    }
+
+    private Product findProduct(List<Product> products, String purchaseProduct) {
+        return products.stream()
+                .filter(product -> product.getName().equals(purchaseProduct))
+                .findFirst()
+                .orElseThrow(IllegalArgumentException::new);
+    }
+
+    private boolean checkMinimumProductPrice(List<Product> products, int amount) {
+        int min = products.stream()
+                .mapToInt(Product::getPrice)
+                .min()
+                .orElse(0);
+        return min > amount;
     }
 
     private int randomChoice(int vendingMachineMoney, Coin coin) {
