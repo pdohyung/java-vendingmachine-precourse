@@ -15,9 +15,9 @@ public class VendingMachineController {
     private final InputView inputView;
     private final OutputView outputView;
 
-    public VendingMachineController(InputView inputView, OutputView outputView) {
-        this.inputView = inputView;
-        this.outputView = outputView;
+    public VendingMachineController() {
+        this.inputView = new InputView();
+        this.outputView = new OutputView();
     }
 
     public void run() {
